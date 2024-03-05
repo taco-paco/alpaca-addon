@@ -1,0 +1,30 @@
+[package]
+name = "alpaca"
+version = "0.0.1"
+edition = "2021"
+
+[lib]
+name = "node_module"
+crate-type = ["cdylib"]
+
+[dependencies]
+starknet-devnet-server = {git="https://github.com/taco-paco/starknet-devnet-rs.git", rev = "5a0be9f23078801fa129d5e9697e014eb8e6430f"}
+starknet-devnet-core = {git="https://github.com/taco-paco/starknet-devnet-rs.git", rev = "5a0be9f23078801fa129d5e9697e014eb8e6430f"}
+starknet-devnet-types = {git="https://github.com/taco-paco/starknet-devnet-rs.git", rev = "5a0be9f23078801fa129d5e9697e014eb8e6430f"}
+
+starknet-core = "0.9.0"
+
+neon-serde2 = {git = "https://github.com/passware/neon-serde.git", rev = "3b36dafefb9096b55b5a1173b094350d252eb820"}
+axum = "0.5"
+serde_json = "1.0.111"
+serde = "1.0.196"
+
+thiserror = "1.0.56"
+
+tokio = { version = "1.35.1", features = ["signal", "rt"] }
+async-trait = "0.1.77"
+
+[dependencies.neon]
+version = "0.9.1"
+default-features = false
+features = ["napi-latest", "event-queue-api"]

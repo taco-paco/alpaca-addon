@@ -1,0 +1,21 @@
+{
+    "exclude": [
+        "node_modules"
+    ],
+    "compilerOptions": {
+        "declaration": true,
+        "outDir": "deliver",
+        "target": "esnext",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "allowJs": false,
+        "checkJs": false,
+        "strict": true,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "noEmit": false
+    },
+    "include": [
+        "lib"
+    ]
+}

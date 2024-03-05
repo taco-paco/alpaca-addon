@@ -1,0 +1,14 @@
+# IDE
+.idea
+
+# JS
+node_modules
+yarn-error.log
+deliver
+
+test/node_modules
+test/yarn-error.log
+test/xunit.xml
+
+# rust
+node/target
