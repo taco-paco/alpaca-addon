@@ -3,9 +3,7 @@ use starknet_devnet_server::{
     rpc_core::response::ResponseResult,
     rpc_handler::RpcHandler,
 };
-use starknet_devnet_types::{
-    starknet_api::block::BlockNumber,
-};
+use starknet_devnet_types::starknet_api::block::BlockNumber;
 use std::ops::DerefMut;
 use std::sync::Arc;
 use tokio::sync::Mutex;

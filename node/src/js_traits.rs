@@ -117,6 +117,7 @@ impl<T: IntoJsType<JsType = JsValue>> IntoJsTypeProxy for PromisifiedJsTypeProxy
 
                 Ok(res)
             }
+            // TODO: return [err.into_js_type] right away?
             Err(err) => Err(err),
         }
     }

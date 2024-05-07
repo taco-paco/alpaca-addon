@@ -1,9 +1,9 @@
+use crate::js_traits::IntoJsType;
 use neon::context::Context;
 use neon::handle::Handle;
 use neon::object::Object;
 use neon::types::{JsError, JsValue};
-
-use crate::js_traits::IntoJsType;
+use snafu::{Backtrace, ErrorCompat, Snafu};
 
 #[derive(Clone, Copy)]
 enum ErrorType {
@@ -20,27 +20,87 @@ impl From<ErrorType> for u32 {
     }
 }
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, Snafu)]
+#[snafu(visibility(pub(crate)))]
 pub enum Error {
-    #[error(transparent)]
-    DevnetStarknetError(#[from] starknet_devnet_core::error::Error),
+    #[snafu(context(false))]
+    DevnetStarknetError {
+        source: starknet_devnet_core::error::Error,
+        backtrace: Backtrace,
+    },
 
-    #[error(transparent)]
-    DevnetServerError(#[from] starknet_devnet_server::error::Error),
+    #[snafu(context(false))]
+    DevnetServerError {
+        source: starknet_devnet_server::error::Error,
+        backtrace: Backtrace,
+    },
 
-    #[error(transparent)]
-    IoError(#[from] std::io::Error),
+    #[snafu(context(false))]
+    IoError {
+        source: std::io::Error,
+        backtrace: Backtrace,
+    },
 
-    #[error("Neon error")]
-    JsError(neon::result::Throw),
+    #[snafu(display("Neon throw"))]
+    JsError {
+        error: neon::result::Throw,
+        backtrace: Backtrace,
+    },
 
-    #[error("")]
-    NeonSerdeError(#[from] neon_serde2::errors::Error),
+    #[snafu(context(false))]
+    NeonSerdeError {
+        source: neon_serde2::errors::Error,
+        backtrace: Backtrace,
+    },
 }
 
 impl From<neon::result::Throw> for Error {
     fn from(value: neon::result::Throw) -> Error {
-        Error::JsError(value)
+        JsSnafu { error: value }.build()
+    }
+}
+
+struct Info {
+    error_type: u32,
+    details: String,
+    backtrace: String,
+}
+
+impl From<&Error> for Info {
+    fn from(value: &Error) -> Self {
+        let backtrace = if let Some(backtrace) =  ErrorCompat::backtrace(value) {
+            format!("{:?}", backtrace)
+        } else {
+            "<empty>".into()
+        };
+
+        match value {
+            Error::DevnetStarknetError { source, backtrace: _ } => Info {
+                error_type: ErrorType::Devnet.into(),
+                details: source.to_string(),
+                backtrace,
+            },
+            Error::IoError { source, backtrace: _ } => Info {
+                error_type: ErrorType::Internal.into(),
+                details: source.to_string(),
+                backtrace,
+            },
+            Error::JsError { error, backtrace: _ } => Info {
+                error_type: ErrorType::Internal.into(),
+                details: error.to_string(),
+                backtrace,
+            },
+            Error::NeonSerdeError { source, backtrace: _ } => Info {
+                error_type: ErrorType::Internal.into(),
+                details: source.to_string(),
+                backtrace,
+            },
+            Error::DevnetServerError { source, backtrace: _ } => Info {
+                error_type: ErrorType::Devnet.into(),
+                details: source.to_string(),
+                backtrace,
+            },
+        }
     }
 }
 
@@ -50,36 +110,7 @@ impl IntoJsType for Error {
     where
         C: Context<'a>,
     {
-        // TODO: add backtrace
-        struct Info {
-            error_type: u32,
-            details: String,
-        }
-
-        // TODO: introduce ErrorType
-        let info = match &self {
-            Error::DevnetStarknetError(err) => Info {
-                error_type: ErrorType::Devnet.into(),
-                details: err.to_string(),
-            },
-            Error::IoError(err) => Info {
-                error_type: ErrorType::Internal.into(),
-                details: err.to_string(),
-            },
-            Error::JsError(err) => Info {
-                error_type: ErrorType::Internal.into(),
-                details: err.to_string(),
-            },
-            Error::NeonSerdeError(err) => Info {
-                error_type: ErrorType::Internal.into(),
-                details: err.to_string(),
-            },
-            Error::DevnetServerError(err) => Info {
-                error_type: ErrorType::Devnet.into(),
-                details: err.to_string(),
-            }
-        };
-
+        let info: Info = (&self).into();
         let error = match JsError::error(cx, info.details) {
             Ok(val) => val,
             Err(_) => return Ok(vec![cx.string("Failed to create an JsError").upcast()]),
@@ -87,14 +118,17 @@ impl IntoJsType for Error {
 
         let error_type = cx.number(info.error_type);
         if let Err(_) = error.set(cx, "type", error_type) {
-            return Ok(vec![cx.string("Failed to set error type o").upcast()]);
+            return Ok(vec![cx.string("Failed to set error type").upcast()]);
+        }
+
+        let backtrace = cx.string(info.backtrace);
+        if let Err(_) = error.set(cx, "backtrace", backtrace) {
+            return Ok(vec![cx.string("Failed to set backtrace").upcast()]);
         }
 
         let engine = cx.string("alpaca-addon");
         if let Err(_) = error.set(cx, "tag", engine) {
-            return Ok(vec![cx
-                .string("Failed to set engine type of async task error")
-                .upcast()]);
+            return Ok(vec![cx.string("Failed to set engine type").upcast()]);
         }
 
         Ok(vec![error.upcast()])

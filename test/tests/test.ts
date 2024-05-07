@@ -52,6 +52,7 @@ describe('Alpaca-addon', function () {
             expect(err.message).to.eq('error creating server listener: Address already in use (os error 48)');
             expect(err.type).to.eq(1);
             expect(err.tag).to.eq('alpaca-addon');
+            expect(err.backtrace).to.be.not.empty
         }
     });
 });

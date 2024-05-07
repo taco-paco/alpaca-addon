@@ -9,12 +9,12 @@ use starknet_devnet_server::{
 use std::net::SocketAddr;
 
 use crate::{
-    types::{AccountData, DevnetConfig},
     errors::Result,
     js_callback::JsCallbackHolder,
     js_traits::FromJsValue,
     json_rpc_wrapper::JsonRpcWrapper,
     server_builder::serve_http_api_json_rpc,
+    types::{AccountData, DevnetConfig},
 };
 
 pub struct DevnetAdapter;
