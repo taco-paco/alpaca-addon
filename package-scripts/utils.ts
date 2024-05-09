@@ -37,6 +37,7 @@ export function obtainCrossCompilationTarget(arch?: SupportedArch): string | nul
 
     if (process.arch === arch) {
         // Native arch is the same as target arch
+        // TODO: throw new Error("") instead?
         return null;
     }
 

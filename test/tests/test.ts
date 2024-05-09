@@ -1,4 +1,4 @@
-import { Devnet, DevnetConfig } from 'alpaca-addon';
+import { Devnet, DevnetConfig, Error } from 'alpaca-addon';
 import { expect } from 'chai';
 
 type AccountData = {
@@ -48,10 +48,11 @@ describe('Alpaca-addon', function () {
             // TODO: make shutdown/stop method on Devnet
             await Devnet.start(config, dataFeed);
             expect.fail('Should of received an error');
-        } catch (err: any) {
+        } catch (anyErr: unknown) {
+            let err = anyErr as unknown as Error;
             expect(err.message).to.eq('error creating server listener: Address already in use (os error 48)');
             expect(err.type).to.eq(1);
-            expect(err.tag).to.eq('alpaca-addon');
+            expect(err.engine).to.eq('alpaca-addon');
             expect(err.backtrace).to.be.not.empty
         }
     });

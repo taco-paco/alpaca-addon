@@ -48,7 +48,7 @@ function makeNpmPackage() {
             email: 'edwinswatpako@gmail.com',
         },
         main: 'index.js',
-        version: '0.0.1',
+        version: '0.0.2',
         os: [process.platform],
         cpu: [arch || process.arch],
         repository: {

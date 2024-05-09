@@ -127,7 +127,7 @@ impl IntoJsType for Error {
         }
 
         let engine = cx.string("alpaca-addon");
-        if let Err(_) = error.set(cx, "tag", engine) {
+        if let Err(_) = error.set(cx, "engine", engine) {
             return Ok(vec![cx.string("Failed to set engine type").upcast()]);
         }
 

@@ -4,6 +4,7 @@ import { DevnetConfig } from './src/types';
 
 export * from './src/types';
 export * from './src/promise';
+export * from './src/error'
 
 export class Devnet {
     // TODO: proper return type
